@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power BI — Data Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#f2c94c;--accent-bg:#fffbeb;--accent-border:#fde68a;--accent-text:#92400e;
+  --bg:#fafaf8;--surface:#f3f1ed;--surface2:#e9e6e0;--border:#dcd9d2;--border2:#c8c4bb;
+  --text:#1c1917;--text2:#57534e;--text3:#a8a29e;
+  --success-bg:#f0fdf4;--success-border:#bbf7d0;--success-text:#166534;
+  --danger-bg:#fff1f2;--danger-border:#fecdd3;--danger-text:#9f1239;
+  --info-bg:#f0f9ff;--info-border:#bae6fd;--info-text:#0c4a6e;
+  --warn-bg:#fffbeb;--warn-border:#fde68a;--warn-text:#92400e;
+  --code-bg:#f5f3ef;--code-border:#e2dfd8;
+  --radius:8px;--radius-sm:5px;
+  --serif:'Lora',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.layout{display:grid;grid-template-columns:264px 1fr;min-height:100vh}
+.sidebar{background:var(--surface);border-right:1.5px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.sidebar-header{padding:1.5rem 1.125rem 1rem;border-bottom:1.5px solid var(--border)}
+.sidebar-eyebrow{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#b45309;margin-bottom:6px;font-family:var(--mono)}
+.sidebar-title{font-size:16px;font-weight:600;color:var(--text);line-height:1.25;font-family:var(--serif)}
+.sidebar-meta{font-size:12px;color:var(--text3);margin-top:4px;font-family:var(--mono)}
+.section-label{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:14px 14px 4px;font-family:var(--mono)}
+.nav-item{display:flex;align-items:flex-start;gap:10px;padding:7px 10px;cursor:pointer;border-radius:var(--radius-sm);margin:1px 8px;transition:background .12s}
+.nav-item:hover{background:var(--surface2)}
+.nav-item.active{background:var(--accent-bg)}
+.nav-item.active .nav-label{color:var(--accent-text);font-weight:500}
+.nav-item.active .nav-num{background:var(--accent);color:#78350f;border-color:var(--accent)}
+.nav-item.done .nav-num{background:#fef3c7;color:#78350f;border-color:#f2c94c}
+.nav-num{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border2);background:var(--bg);color:var(--text3);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-family:var(--mono)}
+.nav-label{font-size:13px;color:var(--text2);line-height:1.35}
+.nav-sub{font-size:11px;color:var(--text3);margin-top:1px;font-family:var(--mono)}
+.sidebar-footer{padding:12px 14px 16px;border-top:1.5px solid var(--border);margin-top:auto}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:6px;font-family:var(--mono)}
+.prog-track{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease}
+.main{padding:2.75rem 3.25rem 5rem;max-width:860px}
+.page{display:none}.page.active{display:block;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.page-eyebrow{font-size:11px;font-weight:500;color:#b45309;margin-bottom:8px;letter-spacing:.05em;font-family:var(--mono)}
+.page-h1{font-size:28px;font-weight:600;letter-spacing:-.01em;line-height:1.2;margin-bottom:8px;font-family:var(--serif)}
+.page-intro{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:1.75rem;padding-bottom:1.5rem;border-bottom:1.5px solid var(--border)}
+h2{font-size:17px;font-weight:600;color:var(--text);margin:2rem 0 .75rem;font-family:var(--serif)}
+h3{font-size:13px;font-weight:600;color:var(--text);margin:1.25rem 0 .5rem}
+p{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:.875rem}
+ul,ol{padding-left:1.25rem;margin-bottom:.875rem}
+li{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:3px}
+strong{color:var(--text);font-weight:600}
+code{font-family:var(--mono);font-size:12px;background:var(--code-bg);border:1px solid var(--code-border);padding:1px 5px;border-radius:4px;color:var(--text)}
+.callout{display:flex;gap:10px;padding:10px 13px;border-radius:var(--radius-sm);font-size:13px;line-height:1.6;margin-bottom:.875rem;border:1px solid}
+.callout-icon{flex-shrink:0;margin-top:1px}
+.callout.tip{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent-text)}
+.callout.info{background:var(--info-bg);border-color:var(--info-border);color:var(--info-text)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn-text)}
+.callout.success{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text)}
+.callout.danger{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger-text)}
+.def-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.def-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:.875rem 1rem}
+.def-term{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;font-family:var(--serif)}
+.def-body{font-size:13px;color:var(--text2);line-height:1.55}
+.def-ex{font-size:12px;color:var(--text3);margin-top:5px;font-family:var(--mono)}
+.card-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:1.25rem;border-radius:var(--radius);overflow:hidden;border:1.5px solid var(--border)}
+.card-table th{background:var(--surface2);padding:8px 12px;text-align:left;font-weight:600;font-size:12px;color:var(--text2);border-bottom:1.5px solid var(--border)}
+.card-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.card-table tr:last-child td{border-bottom:none}
+.card-table tr:nth-child(even) td{background:var(--surface)}
+.card-table td:first-child{font-family:var(--mono);font-size:12px;color:var(--text);font-weight:500}
+.step-list{display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem}
+.step-item{display:flex;gap:12px;align-items:flex-start}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#78350f;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono);margin-top:1px}
+.step-body{flex:1}
+.step-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.step-desc{font-size:13px;color:var(--text2);line-height:1.55}
+.quiz-block{margin-bottom:1.25rem}
+.quiz-q{font-size:14px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.5}
+.quiz-opts{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{width:100%;text-align:left;padding:9px 13px;font-size:13px;font-family:var(--sans);background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;transition:all .1s}
+.quiz-opt:hover:not(:disabled){border-color:var(--accent-border);background:var(--accent-bg);color:var(--text)}
+.quiz-opt.correct{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text);font-weight:500}
+.quiz-opt.wrong{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger-text)}
+.quiz-fb{margin-top:8px;padding:9px 12px;border-radius:var(--radius-sm);font-size:13px;line-height:1.55;display:none;border:1px solid}
+.quiz-fb.show.ok{display:block;background:var(--success-bg);border-color:var(--success-border);color:var(--success-text)}
+.quiz-fb.show.ko{display:block;background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger-text)}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:2.25rem;padding-top:1.25rem;border-top:1.5px solid var(--border)}
+.btn{padding:8px 18px;font-size:13px;font-family:var(--sans);font-weight:500;border-radius:var(--radius-sm);cursor:pointer;transition:all .12s;border:1.5px solid}
+.btn-primary{background:var(--accent);color:#78350f;border-color:var(--accent)}
+.btn-primary:hover{background:#f59e0b;border-color:#f59e0b}
+.btn-ghost{background:transparent;color:var(--text2);border-color:var(--border2)}
+.btn-ghost:hover{background:var(--surface2)}
+.final-card{background:var(--success-bg);border:1.5px solid var(--success-border);border-radius:var(--radius);padding:2rem;text-align:center;margin-top:1.5rem}
+.final-title{font-size:18px;font-weight:600;color:var(--success-text);margin-bottom:6px;font-family:var(--serif)}
+.final-sub{font-size:13px;color:#166534;max-width:440px;margin:0 auto;line-height:1.6}
+.pbi-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:.875rem 0 1.25rem}
+.pbi-bar{background:#1e3a5f;padding:7px 14px;display:flex;align-items:center;gap:8px}
+.pbi-bar-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3)}
+.pbi-bar-title{color:#fff;font-size:11px;font-weight:600;font-family:var(--sans)}
+.pbi-body{padding:1rem 1.25rem;font-size:13px;color:var(--text2);line-height:1.6}
+.pbi-zone{background:#e8edf2;border:2px dashed #b0bec5;border-radius:6px;padding:.875rem 1rem;margin:.5rem 0;font-size:12px;color:#546e7a;font-family:var(--mono);text-align:center}
+.mac-badge{display:inline-flex;align-items:center;gap:5px;background:#1d1d1f;color:#fff;border-radius:4px;padding:2px 8px;font-size:11px;font-family:var(--mono);font-weight:500}
+.win-badge{display:inline-flex;align-items:center;gap:5px;background:#0078d4;color:#fff;border-radius:4px;padding:2px 8px;font-size:11px;font-family:var(--mono);font-weight:500}
+.insight-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:.75rem}
+.insight-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#b45309;font-family:var(--mono);margin-bottom:4px}
+.insight-text{font-size:13px;color:var(--text2);line-height:1.55}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto}.def-grid{grid-template-columns:1fr}.main{padding:1.5rem 1.25rem 3rem}}
+
+.exo-block{border:1.5px solid var(--accent-border);border-radius:var(--radius);overflow:hidden;margin:1.5rem 0}
+.exo-head{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--accent-bg);border-bottom:1.5px solid var(--accent-border)}
+.exo-badge{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#78350f;background:var(--accent);border-radius:4px;padding:2px 8px}
+.exo-time{font-family:var(--mono);font-size:11px;color:#92400e}
+.exo-title-text{font-size:14px;font-weight:600;color:#78350f}
+.exo-body{padding:1rem 1.25rem;background:var(--accent-bg)}
+.exo-body ol,.exo-body ul{margin:.5rem 0 .75rem;padding-left:1.25rem}
+.exo-body li{font-size:13px;color:#78350f;line-height:1.7;margin-bottom:3px}
+.exo-body p{font-size:13px;color:#92400e;margin-bottom:.5rem}
+.corrige-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1.5px solid var(--accent-border);border-radius:var(--radius-sm);padding:5px 12px;font-size:12px;font-family:var(--sans);color:#78350f;cursor:pointer;margin-top:.5rem;transition:all .12s}
+.corrige-btn:hover{background:var(--accent);border-color:var(--accent)}
+.corrige-content{display:none;margin-top:.875rem;padding:.875rem;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--accent-border)}
+.corrige-content.open{display:block}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-eyebrow">Data Monitor · B1 · 13 mai</div>
+    <div class="sidebar-title">Power BI<br>DataViz</div>
+    <div class="sidebar-meta">Séance de 3h30</div>
+  </div>
+  <div class="section-label">Fondamentaux</div>
+  <div class="nav-item active" onclick="goPage(0)" id="nav0"><div class="nav-num">1</div><div><div class="nav-label">Introduction & setup</div><div class="nav-sub">app.powerbi.com, interface</div></div></div>
+  <div class="nav-item" onclick="goPage(1)" id="nav1"><div class="nav-num">2</div><div><div class="nav-label">Connecter les données</div><div class="nav-sub">tuile CSV, import direct</div></div></div>
+  <div class="nav-item" onclick="goPage(2)" id="nav2"><div class="nav-num">3</div><div><div class="nav-label">Power Query</div><div class="nav-sub">types, colonnes calculées</div></div></div>
+  <div class="nav-item" onclick="goPage(3)" id="nav3"><div class="nav-num">4</div><div><div class="nav-label">Visualisations</div><div class="nav-sub">histogramme, slicer, carte</div></div></div>
+  <div class="nav-item" onclick="goPage(4)" id="nav4"><div class="nav-num">5</div><div><div class="nav-label">Modèle de données</div><div class="nav-sub">relations, plusieurs tables</div></div></div>
+  <div class="nav-item" onclick="goPage(5)" id="nav5"><div class="nav-num">6</div><div><div class="nav-label">Mesures DAX</div><div class="nav-sub">AVERAGE, COUNTROWS, CALCULATE</div></div></div>
+  <div class="section-label">Dashboard Data Monitor</div>
+  <div class="nav-item" onclick="goPage(6)" id="nav6"><div class="nav-num">7</div><div><div class="nav-label">Analyse des prix</div><div class="nav-sub">positionnement concurrentiel</div></div></div>
+  <div class="nav-item" onclick="goPage(7)" id="nav7"><div class="nav-num">8</div><div><div class="nav-label">Analyse qualité & catalogue</div><div class="nav-sub">notes, avis, gaps</div></div></div>
+  <div class="nav-item" onclick="goPage(8)" id="nav8"><div class="nav-num">9</div><div><div class="nav-label">Mise en forme & thème</div><div class="nav-sub">couleurs, titres, layout</div></div></div>
+  <div class="nav-item" onclick="goPage(9)" id="nav9"><div class="nav-num">10</div><div><div class="nav-label">Export & rendu</div><div class="nav-sub">PDF, .pbix, checklist</div></div></div>
+  <div class="nav-item" onclick="goPage(10)" id="nav10"><div class="nav-num">11</div><div><div class="nav-label">FAQ & Ressources</div><div class="nav-sub">questions, liens, alternance</div></div></div>
+  <div class="nav-item" onclick="goPage(11)" id="nav11"><div class="nav-num">12</div><div><div class="nav-label">Quiz de validation</div><div class="nav-sub">10 questions</div></div></div>
+  <div class="sidebar-footer">
+    <div class="prog-label"><span>Progression</span><span id="prog-pct">0 %</span></div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+</aside>
+<main class="main">
+
+<div class="page active" id="page0">
+  <div class="page-eyebrow">Fondamentaux 1 / 6</div>
+  <div class="page-h1">Introduction &amp; setup</div>
+  <div class="page-intro">Power BI transforme des données brutes en dashboards interactifs sans écrire de code. On utilise la version web <strong>app.powerbi.com</strong> — aucune installation, fonctionne sur tous les OS.</div>
+
+  <h2>Se connecter</h2>
+  <p>Ouvrir <strong>app.powerbi.com</strong> et se connecter avec un compte Microsoft. Si pas de compte : créer un compte gratuit sur microsoft.com avec une adresse email professionnelle ou scolaire.</p>
+
+  <h2>Le panneau de navigation gauche</h2>
+  <table class="card-table">
+    <thead><tr><th>Icône</th><th>Rôle</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Accueil</strong></td><td>Page d'accueil — rapports récents, raccourcis, bouton + Nouveau rapport</td></tr>
+      <tr><td><strong>Créer</strong></td><td>Créer un nouveau rapport — <strong>c'est ici qu'on commence</strong></td></tr>
+      <tr><td><strong>Parcourir</strong></td><td>Retrouver tous les rapports et jeux de données existants</td></tr>
+      <tr><td><strong>Espaces de travail</strong></td><td>Organiser et partager des rapports en équipe</td></tr>
+      <tr><td><strong>Mon espace de travail</strong></td><td>Espace personnel — les rapports créés s'y enregistrent par défaut</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Créer un rapport — la page de démarrage</h2>
+  <p>Cliquer sur <strong>Créer</strong> dans le panneau gauche (ou <strong>+ Nouveau rapport</strong> depuis l'Accueil). La page "Ajouter des données" s'affiche avec les tuiles de sources disponibles : Obtenir des données, Catalogue OneLake, Excel, <strong>CSV</strong>, Coller manuellement, Modèle sémantique.</p>
+
+  <div class="callout tip">
+    <span class="callout-icon">→</span>
+    <span>Pour Data Monitor on clique directement sur la tuile <strong>CSV</strong> — Power BI ouvre un explorateur de fichiers pour sélectionner le fichier.</span>
+  </div>
+  <div class="exo-block">
+    <div class="exo-head">
+      <span class="exo-badge">Exercice</span>
+      <span class="exo-time">⏱ 5 min</span>
+      <span class="exo-title-text">Explorer l'interface</span>
+    </div>
+    <div class="exo-body">
+      <p>La prof a montré l'interface — à toi :</p>
+      <ol>
+        <li>Ouvre app.powerbi.com et connecte-toi</li>
+        <li>Identifie les 5 icônes du panneau gauche</li>
+        <li>Clique sur Créer — observe les tuiles de sources disponibles</li>
+        <li>Clique sur Parcourir — observe ce qui s'affiche</li>
+        <li>Reviens sur Accueil</li>
+      </ol>
+      <button class="corrige-btn" onclick="toggleCorrige('e0')">Voir le corrigé <span id="e0-arr">▼</span></button>
+      <div class="corrige-content" id="e0"><p>Résultat attendu : tu as vu les tuiles CSV, Excel, Coller manuellement sur la page Créer. Mon espace de travail est vide pour l'instant — normal. La barre de navigation gauche reste accessible depuis toutes les pages.</p></div>
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-q">Quel bouton clique-t-on pour créer un nouveau rapport dans Power BI Service ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p0q1','ko',this)">Mon espace de travail → Importer</button>
+      <button class="quiz-opt" onclick="iq('p0q1','ok',this)">Créer dans le panneau gauche — ou + Nouveau rapport depuis l'Accueil</button>
+      <button class="quiz-opt" onclick="iq('p0q1','ko',this)">Parcourir → Ouvrir un rapport existant</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p0q1"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">Quelle source de données choisit-on pour importer le CSV Data Monitor ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p0q2','ko',this)">Obtenir des données → Texte/CSV</button>
+      <button class="quiz-opt" onclick="iq('p0q2','ok',this)">CSV — la tuile directement visible sur la page de création de rapport</button>
+      <button class="quiz-opt" onclick="iq('p0q2','ko',this)">Coller ou entrer manuellement les données</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p0q2"></div>
+  </div>
+
+  <div class="nav-row"><span></span><button class="btn btn-primary" onclick="goPage(1)">Connecter les données →</button></div>
+</div>
+<div class="page" id="page1">
+  <div class="page-eyebrow">Fondamentaux 2 / 6</div>
+  <div class="page-h1">Connecter les données</div>
+  <div class="page-intro">Pour la séance, on connecte le CSV exporté par le scraper Python. C'est la méthode la plus directe dans Power BI Service.</div>
+
+  <h2>Importer le CSV — étapes exactes</h2>
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-title">Créer → tuile CSV</div><div class="step-desc">Sur app.powerbi.com → <strong>Créer</strong> dans le panneau gauche → cliquer sur la tuile <strong>CSV</strong>. Un explorateur de fichiers s'ouvre.</div></div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-title">Sélectionner le fichier</div><div class="step-desc">Naviguer jusqu'à <code>produits_export.csv</code> → ouvrir. Power BI charge le fichier et ouvre automatiquement <strong>Power Query</strong>.</div></div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-title">Vérifier dans Power Query</div><div class="step-desc">50 lignes, 8 colonnes. Les 3 étapes automatiques sont visibles à droite : <strong>Source, En-têtes promus, Type de colonne</strong>. Vérifier que les données s'affichent correctement.</div></div></div>
+    <div class="step-item"><div class="step-num">4</div><div class="step-body"><div class="step-title">Créer un rapport vide</div><div class="step-desc">Cliquer sur <strong>Créer un rapport</strong> en bas à droite (pas "Créer automatiquement" — on veut choisir nos visuels soi-même).</div></div></div>
+  </div>
+
+  <div class="callout warn">
+    <span class="callout-icon">⚠</span>
+    <span><strong>Problème fréquent :</strong> les colonnes <code>prix</code> et <code>note</code> sont détectées comme texte (icône <strong>Aᵦ</strong>) à cause du point décimal. Ne pas paniquer — on règle ça dans Power Query à la prochaine étape.</span>
+  </div>
+
+  <div class="exo-block">
+    <div class="exo-head">
+      <span class="exo-badge">Exercice</span>
+      <span class="exo-time">⏱ 5 min</span>
+      <span class="exo-title-text">Connecter ton CSV</span>
+    </div>
+    <div class="exo-body">
+      <p>La prof a montré le chemin — à toi :</p>
+      <ol>
+        <li>Clique sur Créer → tuile CSV</li>
+        <li>Sélectionne ton fichier <code>produits_export.csv</code></li>
+        <li>Observe les 3 étapes automatiques dans Étapes appliquées</li>
+        <li>Vérifie que tu vois bien 50 lignes et 8 colonnes en bas</li>
+        <li>Ne clique pas encore sur Créer un rapport — on passe d'abord par Power Query</li>
+      </ol>
+      <button class="corrige-btn" onclick="toggleCorrige('e1')">Voir le corrigé <span id="e1-arr">▼</span></button>
+      <div class="corrige-content" id="e1"><p>Tu dois voir Power Query ouvert avec la table data_monitor_export. Les colonnes prix et note ont probablement une icône Aᵦ (texte) — c'est normal, on les corrige à l'étape suivante.</p></div>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-icon">💡</span>
+    <span><strong>Pour le projet complet</strong> — il est possible de connecter Power BI directement à la base SQLite via un driver ODBC (Windows) ou via un fichier CSV synchronisé sur OneDrive. Ces méthodes permettent d'actualiser le dashboard en un clic après chaque scraping. Détails dans la page FAQ.</span>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-q">Comment importe-t-on le CSV dans Power BI Service ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p1q1','ko',this)">Accueil → Obtenir des données → Texte/CSV</button>
+      <button class="quiz-opt" onclick="iq('p1q1','ok',this)">Créer → tuile CSV → sélectionner le fichier dans l'explorateur</button>
+      <button class="quiz-opt" onclick="iq('p1q1','ko',this)">Copier le contenu du CSV et le coller manuellement</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p1q1"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">Quel avantage a la connexion SQLite ODBC sur l'import CSV pour le projet ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p1q2','ko',this)">Elle fonctionne dans le navigateur sans installation</button>
+      <button class="quiz-opt" onclick="iq('p1q2','ok',this)">Elle actualise le dashboard automatiquement après chaque scraping — plus besoin de réexporter un CSV</button>
+      <button class="quiz-opt" onclick="iq('p1q2','ko',this)">Elle est plus rapide à configurer la première fois</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p1q2"></div>
+  </div>
+
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(0)">← Retour</button><button class="btn btn-primary" onclick="goPage(2)">Power Query →</button></div>
+</div>
+<div class="page" id="page2">
+  <div class="page-eyebrow">Fondamentaux 3 / 6</div>
+  <div class="page-h1">Power Query — nettoyer &amp; enrichir</div>
+  <div class="page-intro">Power Query est l'éditeur de transformation intégré à Power BI. Toutes les modifications faites ici sont <strong>non destructives</strong> — le CSV original reste intact. Chaque transformation est enregistrée comme une étape qu'on peut annuler.</div>
+
+  <h2>Étape 1 — Corriger les types prix et note</h2>
+  <div class="callout warn">
+    <span class="callout-icon">⚠</span>
+    <span><code>prix</code> et <code>note</code> sont détectées comme texte (icône <strong>Aᵦ</strong>) car le CSV utilise un point décimal (<code>849.00</code>) et Power BI est configuré en français (virgule). La méthode standard échoue — voici la seule qui fonctionne.</span>
+  </div>
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-title">Supprimer l'étape "Type de co..." automatique</div><div class="step-desc">Dans le volet <strong>Étapes appliquées</strong> → cliquer sur le <strong>×</strong> à gauche de l'étape "Type de co...". Les colonnes reviennent avec leur type brut.</div></div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-title">Cliquer sur l'icône Aᵦ de la colonne prix</div><div class="step-desc">Cliquer directement sur l'icône <strong>Aᵦ</strong> dans l'en-tête de la colonne <code>prix</code> → choisir <strong>Utilisation des paramètres régionaux...</strong> (pas "Nombre décimal" seul — ça échoue).</div></div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-title">Choisir Nombre décimal · Anglais (États-Unis)</div><div class="step-desc">Type de données = <strong>Nombre décimal</strong> · Paramètres régionaux = <strong>Anglais (États-Unis)</strong> → OK. L'icône passe en <strong>1.2</strong>.</div></div></div>
+    <div class="step-item"><div class="step-num">4</div><div class="step-body"><div class="step-title">Répéter pour la colonne note</div><div class="step-desc">Même procédure sur la colonne <code>note</code>. Les autres colonnes (nb_avis, en_stock, nom, source, catégorie) sont déjà bien typées.</div></div></div>
+  </div>
+
+  <h2>Étape 2 — Ajouter des colonnes calculées</h2>
+  <p>L'onglet <strong>Ajouter une colonne → Colonne conditionnelle</strong> propose une interface graphique — pas besoin d'écrire de formule.</p>
+
+  <table class="card-table">
+    <thead><tr><th>Colonne à créer</th><th>Règle</th><th>Utilité dans le dashboard</th></tr></thead>
+    <tbody>
+      <tr><td><code>Segment prix</code></td><td>prix ≥ 500 → "Premium" · prix ≥ 100 → "Mid-range" · sinon → "Entrée de gamme"</td><td>Filtrer par segment dans un slicer</td></tr>
+      <tr><td><code>bien_note</code></td><td>note ≥ 4.5 → 1 · sinon → 0</td><td>Compter les produits bien notés dans les mesures DAX</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <span class="callout-icon">💡</span>
+    <span><strong>Pourquoi Power Query plutôt qu'Excel ?</strong> Les transformations sont des étapes enregistrées. Quand le scraper tourne et génère de nouvelles données, Power BI les relit et <em>rejoue automatiquement</em> toutes les étapes — sans rien refaire. En Excel, il faudrait tout recommencer.</span>
+  </div>
+
+  <h2>Étape 3 — Créer la colonne Segment prix</h2>
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-title">Ajouter une colonne → Colonne conditionnelle</div><div class="step-desc">Nommer la colonne <code>Segment prix</code>.</div></div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-title">Configurer les règles</div><div class="step-desc">Règle 1 : <code>prix</code> est supérieur ou égal à <code>500</code> → sortie <code>Premium</code>. Ajouter clause → <code>prix</code> ≥ <code>100</code> → <code>Mid-range</code>. Sinon : <code>Entrée de gamme</code>.</div></div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-title">Valider → OK</div><div class="step-desc">La colonne apparaît à droite. Vérifier quelques valeurs.</div></div></div>
+  </div>
+
+  <h2>Étape 4 — Fermer et appliquer</h2>
+  <p>Cliquer sur <strong>Créer un rapport</strong> en bas à droite (ou Accueil → Fermer et appliquer). Les données nettoyées et enrichies chargent dans Power BI.</p>
+
+  <div class="exo-block">
+    <div class="exo-head">
+      <span class="exo-badge">Exercice</span>
+      <span class="exo-time">⏱ 10 min</span>
+      <span class="exo-title-text">Nettoyer et enrichir les données</span>
+    </div>
+    <div class="exo-body">
+      <p>La prof a montré les étapes — à toi :</p>
+      <ol>
+        <li>Supprimer l'étape "Type de co..." automatique</li>
+        <li>Corriger le type de la colonne <code>prix</code> → icône Aᵦ → Utilisation des paramètres régionaux → Nombre décimal · Anglais (États-Unis)</li>
+        <li>Faire de même pour <code>note</code></li>
+        <li>Créer la colonne conditionnelle <code>Segment prix</code> (Premium / Mid-range / Entrée de gamme)</li>
+        <li>Créer la colonne conditionnelle <code>bien_note</code> (1 si note ≥ 4.5, sinon 0)</li>
+        <li>Cliquer sur Créer un rapport</li>
+      </ol>
+      <button class="corrige-btn" onclick="toggleCorrige('e2')">Voir le corrigé <span id="e2-arr">▼</span></button>
+      <div class="corrige-content" id="e2"><p>Résultat attendu : les colonnes prix et note affichent l'icône <strong>1.2</strong>. Les colonnes Segment prix et bien_note apparaissent dans le volet Données. Le rapport s'ouvre avec un canevas vide.</p></div>
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-q">Pourquoi utiliser "Utilisation des paramètres régionaux" pour typer la colonne prix ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p2q1','ko',this)">C'est le chemin standard pour changer un type dans Power Query</button>
+      <button class="quiz-opt" onclick="iq('p2q1','ok',this)">Le CSV utilise un point décimal (849.00) mais Power BI est en français (virgule) — il faut spécifier la locale Anglais (États-Unis) pour que la conversion fonctionne</button>
+      <button class="quiz-opt" onclick="iq('p2q1','ko',this)">Pour accéder à plus de types de données</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p2q1"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">Pour créer une colonne "Segment prix" sans écrire de formule, quelle option utiliser ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p2q2','ko',this)">Colonne personnalisée — formule libre en M</button>
+      <button class="quiz-opt" onclick="iq('p2q2','ok',this)">Colonne conditionnelle — interface graphique if/else sans formule à écrire</button>
+      <button class="quiz-opt" onclick="iq('p2q2','ko',this)">Transformer → Détecter le type de données</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p2q2"></div>
+  </div>
+
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(1)">← Retour</button><button class="btn btn-primary" onclick="goPage(3)">Visualisations →</button></div>
+</div>
+<div class="page" id="page3">
+  <div class="page-eyebrow">Fondamentaux 4 / 6</div>
+  <div class="page-h1">Créer des visualisations</div>
+  <div class="page-intro">Une fois le rapport ouvert, le canevas est vide. Trois zones à connaître : le <strong>canevas</strong> au centre, le volet <strong>Visualisations</strong> à droite (types de graphiques + configuration), et le volet <strong>Données</strong> tout à droite (colonnes à glisser).</div>
+
+  <h2>Créer un visuel — principe général</h2>
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-title">Cliquer sur une icône dans le volet Visualisations</div><div class="step-desc">Un visuel vide apparaît sur le canevas. Ou glisser un champ depuis Données directement sur le canevas.</div></div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-title">Glisser les champs dans les zones</div><div class="step-desc">Zones disponibles en bas du volet Visualisations : <strong>Axe X, Axe Y, Légende, Valeurs</strong>. Glisser les colonnes depuis le volet Données.</div></div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-title">Changer l'agrégation</div><div class="step-desc">Par défaut Power BI <strong>somme</strong> les valeurs numériques. Cliquer sur la flèche <strong>▼</strong> à côté du champ dans la zone → choisir <strong>Moyenne</strong> pour prix et notes.</div></div></div>
+    <div class="step-item"><div class="step-num">4</div><div class="step-body"><div class="step-title">Titrer le visuel</div><div class="step-desc">Icône pinceau (Format) → Titre → saisir une question précise. Un visuel sans titre est illisible hors contexte.</div></div></div>
+  </div>
+
+  <h2>Les visuels essentiels pour Data Monitor</h2>
+  <div class="def-grid">
+    <div class="def-card"><div class="def-term">📊 Histogramme groupé</div><div class="def-body">Comparer des valeurs entre catégories et sources.</div><div class="def-ex">Axe X : categorie · Valeurs : prix (moy) · Légende : source</div></div>
+    <div class="def-card"><div class="def-term">🃏 Carte (KPI)</div><div class="def-body">Afficher un chiffre clé en grand.</div><div class="def-ex">Valeurs : prix (moy) ou COUNTROWS</div></div>
+    <div class="def-card"><div class="def-term">🎛 Segment (Slicer)</div><div class="def-body">Filtre interactif — filtre tous les visuels de la page.</div><div class="def-ex">Champ : source ou categorie</div></div>
+    <div class="def-card"><div class="def-term">📋 Matrice</div><div class="def-body">Tableau croisé — comme un TCD Excel.</div><div class="def-ex">Lignes : categorie · Colonnes : source · Valeurs : prix (moy)</div></div>
+    <div class="def-card"><div class="def-term">🫧 Nuage de points</div><div class="def-body">Corrélation + 3e variable via la taille des bulles.</div><div class="def-ex">X : prix · Y : note · Taille : nb_avis · Légende : source</div></div>
+    <div class="def-card"><div class="def-term">📈 Courbe</div><div class="def-body">Évolution dans le temps.</div><div class="def-ex">Axe X : scraped_at · Valeurs : prix (moy)</div></div>
+  </div>
+
+  <h2>Ajouter un Slicer et tester l'interactivité</h2>
+  <p>Cliquer sur l'icône Segment dans le volet Visualisations → glisser le champ <code>source</code> dans la zone Champ. Cliquer sur "Client" dans le slicer → tous les autres visuels de la page se filtrent automatiquement. C'est le comportement central de Power BI.</p>
+
+  <h2>Ajouter une page au rapport</h2>
+  <p>Cliquer sur le <strong>+</strong> en bas à gauche du canevas → double-cliquer sur l'onglet pour renommer : "Prix", "Qualité".</p>
+
+  <div class="exo-block">
+    <div class="exo-head">
+      <span class="exo-badge">Exercice</span>
+      <span class="exo-time">⏱ 15 min</span>
+      <span class="exo-title-text">Premier dashboard</span>
+    </div>
+    <div class="exo-body">
+      <p>La prof a montré comment créer un histogramme et un slicer — à toi de construire :</p>
+      <ol>
+        <li>Créer un <strong>histogramme groupé</strong> : Axe X = categorie, Valeurs = prix (Moyenne), Légende = source</li>
+        <li>Titrer : "Prix moyen par catégorie et par source"</li>
+        <li>Créer un <strong>Slicer</strong> sur le champ source</li>
+        <li>Tester : cliquer sur "Client" dans le slicer — l'histogramme se met-il à jour ?</li>
+        <li>Créer une <strong>Carte KPI</strong> avec le prix moyen global</li>
+        <li>Bonus : créer une <strong>Matrice</strong> categorie × source avec le prix moyen</li>
+      </ol>
+      <button class="corrige-btn" onclick="toggleCorrige('e3')">Voir le corrigé <span id="e3-arr">▼</span></button>
+      <div class="corrige-content" id="e3"><p>Résultat attendu : un histogramme qui montre clairement si le Client est plus ou moins cher que ses concurrents selon la catégorie. En cliquant "Client" dans le slicer, l'histogramme ne montre que les barres Client. La carte KPI affiche une valeur unique.</p></div>
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-q">Comment changer la Somme en Moyenne pour le champ prix dans un visuel ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p3q1','ko',this)">Recréer le visuel depuis zéro</button>
+      <button class="quiz-opt" onclick="iq('p3q1','ok',this)">Cliquer sur la flèche ▼ à côté du champ dans la zone Valeurs → choisir Moyenne</button>
+      <button class="quiz-opt" onclick="iq('p3q1','ko',this)">Créer une mesure DAX AVERAGE</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p3q1"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">À quoi sert un Segment (Slicer) ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p3q2','ko',this)">Afficher un graphique en tranches</button>
+      <button class="quiz-opt" onclick="iq('p3q2','ok',this)">Créer un filtre interactif qui s'applique simultanément à tous les visuels de la page</button>
+      <button class="quiz-opt" onclick="iq('p3q2','ko',this)">Découper les données en quartiles</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p3q2"></div>
+  </div>
+
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(2)">← Retour</button><button class="btn btn-primary" onclick="goPage(4)">Modèle de données →</button></div>
+</div>
+<div class="page" id="page4">
+  <div class="page-eyebrow">Fondamentaux 5 / 6</div>
+  <div class="page-h1">Modèle de données</div>
+  <div class="page-intro">Pour Data Monitor avec un seul CSV, pas besoin de cette page — tout est dans une table. La vue Modèle devient indispensable si vous importez plusieurs CSV ou tables à croiser.</div>
+
+  <div class="callout tip">
+    <span class="callout-icon">→</span>
+    <span>Si tu n'as qu'un seul CSV, tu peux passer directement à la page suivante (DAX). Reviens ici si tu veux croiser plusieurs sources de données.</span>
+  </div>
+
+  <h2>Vue Modèle</h2>
+  <p>Cliquer sur l'icône <strong>Modèle</strong> dans la barre de gauche du rapport. Chaque table importée apparaît comme une carte. On crée une relation en faisant glisser une colonne vers une autre.</p>
+
+  <h2>Créer une relation entre deux tables</h2>
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-title">Glisser la colonne FK vers la PK</div><div class="step-desc">Ex : glisser <code>categorie_id</code> de la table <code>produits</code> vers <code>id</code> de la table <code>categories</code>. Une ligne de relation apparaît entre les deux cartes.</div></div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-title">Vérifier la cardinalité</div><div class="step-desc">Double-clic sur la relation → vérifier <strong>Plusieurs à un (*:1)</strong>. Sens du filtre : Single (la table "un" filtre la table "plusieurs").</div></div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-title">Fusionner plusieurs CSV avec la même structure</div><div class="step-desc">Si chaque CSV correspond à une date de scraping différente → dans Power Query : Accueil → Nouvelle source → <strong>Dossier</strong> → sélectionner le dossier → <strong>Combiner</strong>. Power BI empile toutes les tables et ajoute une colonne <code>Source.Name</code>.</div></div></div>
+  </div>
+
+  <div class="exo-block">
+    <div class="exo-head">
+      <span class="exo-badge">Exercice</span>
+      <span class="exo-time">⏱ 5 min</span>
+      <span class="exo-title-text">Explorer la vue Modèle</span>
+    </div>
+    <div class="exo-body">
+      <p>Même si tu n'as qu'une table :</p>
+      <ol>
+        <li>Clique sur l'icône Modèle dans la barre gauche du rapport</li>
+        <li>Observe ta table data_monitor_export avec ses colonnes</li>
+        <li>Reviens en vue Rapport</li>
+        <li>Bonus : si tu as un 2e CSV, importe-le et crée une relation</li>
+      </ol>
+      <button class="corrige-btn" onclick="toggleCorrige('e4')">Voir le corrigé <span id="e4-arr">▼</span></button>
+      <div class="corrige-content" id="e4"><p>Avec un seul CSV tu vois une seule carte avec les 8 colonnes (+ les 2 colonnes calculées). C'est normal — pas de relation à créer. La vue Modèle est utile quand on croise plusieurs tables.</p></div>
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-q">Dans quel sens crée-t-on une relation dans Power BI ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p4q1','ok',this)">On fait glisser la colonne FK de la table "plusieurs" vers la PK de la table "un"</button>
+      <button class="quiz-opt" onclick="iq('p4q1','ko',this)">On fait glisser la PK vers la FK</button>
+      <button class="quiz-opt" onclick="iq('p4q1','ko',this)">Power BI crée les relations automatiquement</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p4q1"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">Pour Data Monitor avec un seul CSV, faut-il créer des relations dans la vue Modèle ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p4q2','ko',this)">Oui — toujours créer des relations</button>
+      <button class="quiz-opt" onclick="iq('p4q2','ok',this)">Non — avec une seule table, pas besoin. Les relations deviennent utiles si on importe plusieurs CSV à croiser</button>
+      <button class="quiz-opt" onclick="iq('p4q2','ko',this)">Oui — sinon les visuels ne fonctionnent pas</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p4q2"></div>
+  </div>
+
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(3)">← Retour</button><button class="btn btn-primary" onclick="goPage(5)">Mesures DAX →</button></div>
+</div>
+<div class="page" id="page5">
+  <div class="page-eyebrow">Fondamentaux 6 / 6</div>
+  <div class="page-h1">Mesures DAX</div>
+  <div class="page-intro">DAX (Data Analysis Expressions) permet de créer des calculs qui s'adaptent automatiquement aux filtres actifs dans le rapport. Une mesure DAX se recalcule à chaque clic — c'est ce qui rend le dashboard vraiment interactif.</div>
+
+  <h2>Créer une mesure</h2>
+  <p>Dans le volet <strong>Données</strong> à droite → clic droit sur la table → <strong>Nouvelle mesure</strong> → saisir la formule → Entrée.</p>
+
+  <h2>Les mesures essentielles — avec équivalent Excel</h2>
+  <table class="card-table">
+    <thead><tr><th>Mesure</th><th>Formule DAX</th><th>Équivalent Excel</th></tr></thead>
+    <tbody>
+      <tr><td>Prix moyen</td><td><code>AVERAGE(produits[prix])</code></td><td>MOYENNE(D:D)</td></tr>
+      <tr><td>Note moyenne</td><td><code>AVERAGE(produits[note])</code></td><td>MOYENNE(E:E)</td></tr>
+      <tr><td>Nb produits</td><td><code>COUNTROWS(produits)</code></td><td>NBVAL(A:A)</td></tr>
+      <tr><td>Nb bien notés</td><td><code>COUNTROWS(FILTER(produits, produits[note] >= 4.5))</code></td><td>NB.SI(E:E;">=4.5")</td></tr>
+      <tr><td>Division sécurisée</td><td><code>DIVIDE(valeur_a, valeur_b, 0)</code></td><td>=A/B sans gestion du /0</td></tr>
+    </tbody>
+  </table>
+
+  <h2>CALCULATE — calculer en ignorant les filtres du rapport</h2>
+  <p>CALCULATE modifie le <strong>contexte de filtre</strong>. Quand un visuel affiche "Audio", toutes les mesures se calculent sur "Audio" seulement. CALCULATE permet de forcer un filtre spécifique — par exemple toujours calculer le prix moyen pour source = "Client", quel que soit ce que l'utilisateur a sélectionné.</p>
+
+  <div class="pbi-panel">
+    <div class="pbi-bar"><div class="pbi-bar-dot"></div><div class="pbi-bar-title">DAX — CALCULATE pour Data Monitor</div></div>
+    <div class="pbi-body">
+      <code style="display:block;margin-bottom:.5rem;color:#b45309">// Prix moyen Client — indépendant du filtre actif</code>
+      <code style="display:block;margin-bottom:.875rem">Prix moyen Client = CALCULATE(AVERAGE(produits[prix]), produits[source] = "Client")</code>
+      <code style="display:block;margin-bottom:.5rem;color:#b45309">// Prix moyen Amazon</code>
+      <code style="display:block;margin-bottom:.875rem">Prix moyen Amazon = CALCULATE(AVERAGE(produits[prix]), produits[source] = "Amazon")</code>
+      <code style="display:block;margin-bottom:.5rem;color:#b45309">// Écart en % — DIVIDE évite l'erreur si Amazon = 0</code>
+      <code style="display:block">Écart % = DIVIDE([Prix moyen Client] - [Prix moyen Amazon], [Prix moyen Amazon]) * 100</code>
+    </div>
+  </div>
+
+  <div class="exo-block">
+    <div class="exo-head">
+      <span class="exo-badge">Exercice</span>
+      <span class="exo-time">⏱ 10 min</span>
+      <span class="exo-title-text">Créer tes premières mesures DAX</span>
+    </div>
+    <div class="exo-body">
+      <p>La prof a montré comment créer une mesure — à toi :</p>
+      <ol>
+        <li>Clic droit sur la table dans le volet Données → Nouvelle mesure</li>
+        <li>Créer <code>Prix moyen Client = CALCULATE(AVERAGE(produits[prix]), produits[source] = "Client")</code></li>
+        <li>Créer <code>Prix moyen Amazon = CALCULATE(AVERAGE(produits[prix]), produits[source] = "Amazon")</code></li>
+        <li>Créer <code>Écart % = DIVIDE([Prix moyen Client] - [Prix moyen Amazon], [Prix moyen Amazon]) * 100</code></li>
+        <li>Ajouter une Carte KPI avec chaque mesure sur ton dashboard</li>
+        <li>Activer un slicer sur source — les cartes CALCULATE changent-elles ? Pourquoi ?</li>
+      </ol>
+      <button class="corrige-btn" onclick="toggleCorrige('e5')">Voir le corrigé <span id="e5-arr">▼</span></button>
+      <div class="corrige-content" id="e5"><p>Les cartes avec CALCULATE ne doivent PAS changer quand tu filtres sur "Client" dans le slicer — elles ignorent le filtre et calculent toujours sur source = "Client" (ou Amazon). C'est exactement le comportement voulu pour comparer. Si elles changent, vérifier la formule CALCULATE.</p></div>
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-q">Quelle formule DAX calcule le nombre de lignes dans la table produits ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p5q1','ko',this)">COUNT(produits)</button>
+      <button class="quiz-opt" onclick="iq('p5q1','ok',this)">COUNTROWS(produits)</button>
+      <button class="quiz-opt" onclick="iq('p5q1','ko',this)">SUM(produits[id])</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p5q1"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">À quoi sert CALCULATE dans une mesure DAX ?</div>
+    <div class="quiz-opts">
+      <button class="quiz-opt" onclick="iq('p5q2','ko',this)">Calculer la somme d'une colonne</button>
+      <button class="quiz-opt" onclick="iq('p5q2','ok',this)">Modifier le contexte de filtre — forcer un calcul dans des conditions spécifiques, indépendamment des filtres actifs dans le rapport</button>
+      <button class="quiz-opt" onclick="iq('p5q2','ko',this)">Créer une colonne calculée dans Power Query</button>
+    </div>
+    <div class="quiz-fb" id="iqfb-p5q2"></div>
+  </div>
+
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(4)">← Retour</button><button class="btn btn-primary" onclick="goPage(6)">Dashboard Prix →</button></div>
+</div>
+<div class="page" id="page6">
+  <div class="page-eyebrow">Dashboard Data Monitor 1 / 3</div>
+  <div class="page-h1">Page 1 — Analyse des prix</div>
+  <div class="page-intro">Premier onglet du dashboard : positionner le client face à ses concurrents. L'objectif est qu'en 30 secondes, le client voit où il est plus cher et où il est compétitif.</div>
+
+  <h2>Structure de la page</h2>
+  <table class="card-table">
+    <thead><tr><th>Visuel</th><th>Configuration</th><th>Insight attendu</th></tr></thead>
+    <tbody>
+      <tr><td>3 Cartes KPI</td><td>Prix moyen Client / Prix moyen marché / Écart %</td><td>Vue globale du positionnement</td></tr>
+      <tr><td>Histogramme groupé</td><td>Axe : categorie · Valeurs : prix moyen · Légende : source</td><td>Catégories où le client est plus cher</td></tr>
+      <tr><td>Matrice</td><td>Lignes : categorie · Colonnes : source · Valeurs : prix moyen</td><td>Tableau détaillé comme le TCD Excel</td></tr>
+      <tr><td>Slicer</td><td>Champ : categorie</td><td>Filtrer par catégorie pour zoomer</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Calculer l'écart Client vs Amazon</h2>
+  <p>Créer une mesure DAX pour l'écart de prix :</p>
+  <div class="pbi-panel">
+    <div class="pbi-bar"><div class="pbi-bar-dot"></div><div class="pbi-bar-title">DAX — Mesure "Écart Client vs Amazon %"</div></div>
+    <div class="pbi-body">
+      <code>Ecart Client vs Amazon % =
+DIVIDE(
+    CALCULATE(AVERAGE(produits[prix]), produits[source] = "Client") -
+    CALCULATE(AVERAGE(produits[prix]), produits[source] = "Amazon"),
+    CALCULATE(AVERAGE(produits[prix]), produits[source] = "Amazon")
+) * 100</code>
+      <p style="margin-top:.75rem;font-size:12px;color:var(--text3)">DIVIDE gère la division par zéro. CALCULATE filtre sur une valeur spécifique de source.</p>
+    </div>
+  </div>
+
+  <h2>Mise en forme conditionnelle</h2>
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-title">Sélectionner le visuel Matrice</div></div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-title">Format → Mise en forme conditionnelle → Couleur d'arrière-plan</div><div class="step-desc">Choisir une échelle de couleur : vert (prix bas) → rouge (prix élevé). Les colonnes Client en rouge ressortent immédiatement.</div></div></div>
+  </div>
+
+    <div class="exo-block">
+    <div class="exo-head">
+      <span class="exo-badge">Exercice</span>
+      <span class="exo-time">⏱ 20 min</span>
+      <span class="exo-title-text">Construire la page Analyse des prix</span>
+    </div>
+    <div class="exo-body">
+      <p>À partir des mesures CALCULATE créées, construire la page 1 du dashboard :</p>
+      <ol>
+        <li>Renommer la page 1 : "Analyse des prix"</li>
+        <li>Ajouter 3 cartes KPI : Prix moyen Client / Prix moyen Amazon / Écart %</li>
+        <li>Ajouter un histogramme groupé : categorie × source, valeur = prix moyen</li>
+        <li>Ajouter une Matrice : lignes = categorie, colonnes = source, valeurs = prix moyen</li>
+        <li>Appliquer la mise en forme conditionnelle sur la Matrice (rouge = cher)</li>
+        <li>Ajouter un Slicer sur la colonne categorie</li>
+      </ol>
+      <button class="corrige-btn" onclick="toggleCorrige('e6')">Voir le corrigé <span id="e6-arr">▼</span></button>
+      <div class="corrige-content" id="e6"><p>La page doit permettre de voir en 30 secondes où le Client est plus cher que ses concurrents. L'histogramme montre les catégories, la Matrice donne les chiffres précis, le Slicer permet de zoomer sur une catégorie.</p></div>
+    </div>
+  </div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(5)">← Retour</button><button class="btn btn-primary" onclick="goPage(7)">Analyse qualité →</button></div>
+</div>
+
+<!-- PAGE 6 — Qualité & catalogue -->
+
+<div class="page" id="page7">
+  <div class="page-eyebrow">Dashboard Data Monitor 2 / 3</div>
+  <div class="page-h1">Page 2 — Qualité &amp; catalogue</div>
+  <div class="page-intro">Deuxième onglet : qualité perçue (notes, avis) et gaps de catalogue (produits populaires absents). Deux questions : est-ce que le client est bien noté ? Manque-t-il des produits importants ?</div>
+
+  <h2>Structure de la page</h2>
+  <table class="card-table">
+    <thead><tr><th>Visuel</th><th>Configuration</th><th>Insight attendu</th></tr></thead>
+    <tbody>
+      <tr><td>Histogramme groupé</td><td>Axe : categorie · Valeurs : note moyenne · Légende : source</td><td>Catégories où le client est sous la moyenne</td></tr>
+      <tr><td>Graphique à bulles</td><td>Axe X : prix moyen · Axe Y : note moyenne · Taille : nb_avis · Légende : source</td><td>Corrélation prix / qualité / popularité</td></tr>
+      <tr><td>Table triée</td><td>Colonnes : nom, source, prix, note, nb_avis · Tri : nb_avis desc</td><td>Top produits populaires — le client les propose-t-il ?</td></tr>
+      <tr><td>Slicer</td><td>Champ : source</td><td>Isoler Client vs concurrents</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Graphique à bulles — le plus puissant</h2>
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-title">Choisir "Nuage de points" dans Visualisations</div></div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-title">Configurer les axes</div><div class="step-desc">Axe X = <code>prix</code> (moyenne) · Axe Y = <code>note</code> (moyenne) · Taille = <code>nb_avis</code> (somme) · Légende = <code>source</code></div></div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-title">Ajouter les étiquettes</div><div class="step-desc">Format → Étiquettes de données → Activer → choisir <code>nom</code> comme étiquette. Les produits phares s'affichent avec leur nom.</div></div></div>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-icon">💡</span>
+    <span>Le graphique à bulles révèle les <strong>quadrants</strong> : produits chers ET bien notés (premium justifié), produits chers ET mal notés (problème), produits bon marché ET bien notés (opportunité). C'est l'insight le plus actionnable pour le client.</span>
+  </div>
+
+    <div class="exo-block">
+    <div class="exo-head">
+      <span class="exo-badge">Exercice</span>
+      <span class="exo-time">⏱ 20 min</span>
+      <span class="exo-title-text">Construire la page Qualité & catalogue</span>
+    </div>
+    <div class="exo-body">
+      <p>Ajouter une 2e page "Qualité" au rapport :</p>
+      <ol>
+        <li>Cliquer sur + en bas → renommer "Qualité & catalogue"</li>
+        <li>Ajouter un histogramme groupé : categorie × source, valeur = note moyenne</li>
+        <li>Ajouter un graphique à bulles : X = prix moyen, Y = note moyenne, Taille = nb_avis, Légende = source</li>
+        <li>Ajouter une table triée par nb_avis décroissant : nom, source, prix, note, nb_avis</li>
+        <li>Ajouter un Slicer sur source</li>
+        <li>Observer : quels produits sont populaires chez les concurrents mais absents chez le Client ?</li>
+      </ol>
+      <button class="corrige-btn" onclick="toggleCorrige('e7')">Voir le corrigé <span id="e7-arr">▼</span></button>
+      <div class="corrige-content" id="e7"><p>Le graphique à bulles est le plus puissant — il montre les 4 quadrants : cher+bien noté (premium justifié), cher+mal noté (problème), pas cher+bien noté (opportunité), pas cher+mal noté (produits à éviter). Les bulles grosses = très populaires.</p></div>
+    </div>
+  </div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(6)">← Retour</button><button class="btn btn-primary" onclick="goPage(8)">Mise en forme →</button></div>
+</div>
+
+<!-- PAGE 7 — Mise en forme & thème -->
+
+<div class="page" id="page8">
+  <div class="page-eyebrow">Dashboard Data Monitor 3 / 3</div>
+  <div class="page-h1">Mise en forme &amp; thème</div>
+  <div class="page-intro">Un dashboard sans mise en forme est illisible en soutenance. Cinq actions rapides qui font la différence.</div>
+
+  <h2>1. Appliquer un thème</h2>
+  <p><strong>Affichage → Thèmes</strong> → choisir un thème clair et lisible. Eviter les fonds noirs pour les soutenances (projection souvent mauvaise). Le thème "Exécutif" ou "Innovateur" fonctionnent bien.</p>
+
+  <h2>2. Titrer chaque visuel</h2>
+  <p>Sélectionner un visuel → Format → Titre → activer → saisir une question : <em>"Prix moyen par catégorie — Client vs concurrents"</em>. Un visuel sans titre est illisible hors contexte.</p>
+
+  <h2>3. Cohérence des couleurs</h2>
+  <p>Attribuer une couleur fixe par source dans tous les graphiques : Client = bleu, Amazon = orange, Fnac = vert, Darty = rouge. Clic droit sur une série → Couleur de la série.</p>
+
+  <h2>4. Aligner et redimensionner</h2>
+  <p>Sélectionner plusieurs visuels (Maj + clic) → <strong>Format → Aligner</strong>. Les visuels alignés donnent une impression de professionnalisme immédiate.</p>
+
+  <h2>5. Ajouter une zone de texte titre de page</h2>
+  <p><strong>Insertion → Zone de texte</strong> → saisir le titre de la page : "Data Monitor — Analyse concurrentielle Mai 2025". Police grande, couleur de l'accent du thème.</p>
+
+  <div class="callout tip">
+    <span class="callout-icon">→</span>
+    <span>Règle des 3 : pas plus de 3 couleurs distinctes, pas plus de 3 types de visuels différents par page, pas plus de 3 pages dans le rapport. La simplicité rend le dashboard mémorable.</span>
+  </div>
+
+    <div class="exo-block">
+    <div class="exo-head">
+      <span class="exo-badge">Exercice</span>
+      <span class="exo-time">⏱ 10 min</span>
+      <span class="exo-title-text">Finaliser la mise en forme</span>
+    </div>
+    <div class="exo-body">
+      <p>Sur tes deux pages de dashboard :</p>
+      <ol>
+        <li>Affichage → Thèmes → choisir un thème clair (ex: Exécutif)</li>
+        <li>Vérifier que chaque visuel a un titre explicite</li>
+        <li>Harmoniser les couleurs : une couleur par source (Client = bleu, Amazon = orange…)</li>
+        <li>Sélectionner plusieurs visuels (Maj + clic) → Format → Aligner</li>
+        <li>Ajouter une zone de texte titre en haut de chaque page</li>
+      </ol>
+      <button class="corrige-btn" onclick="toggleCorrige('e8')">Voir le corrigé <span id="e8-arr">▼</span></button>
+      <div class="corrige-content" id="e8"><p>Un dashboard bien mis en forme est beaucoup plus convaincant en soutenance. La règle des 3 : pas plus de 3 couleurs, 3 types de visuels, 3 pages. La simplicité rend le dashboard mémorable.</p></div>
+    </div>
+  </div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(7)">← Retour</button><button class="btn btn-primary" onclick="goPage(9)">Export & rendu →</button></div>
+</div>
+
+<!-- PAGE 8 — Export & rendu -->
+
+<div class="page" id="page9">
+  <div class="page-eyebrow">Export & rendu</div>
+  <div class="page-h1">Exporter &amp; rendre</div>
+  <div class="page-intro">Le rendu du 13 mai comporte un fichier Power BI (.pbix) ET un export PDF du dashboard. Voici comment produire les deux proprement.</div>
+
+  <h2>Export PDF</h2>
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-title">Fichier → Exporter → Exporter en PDF</div><div class="step-desc">Power BI exporte toutes les pages du rapport en PDF. Chaque page du rapport devient une page du PDF.</div></div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-title">Vérifier le PDF</div><div class="step-desc">Ouvrir le PDF généré. Vérifier que les titres sont lisibles, que les couleurs sont correctes et que les données sont à jour.</div></div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-title">Nommer le fichier</div><div class="step-desc"><code>data_monitor_dashboard_[num_groupe]_mai2026.pdf</code></div></div></div>
+  </div>
+
+  <h2>Sauvegarder le fichier .pbix</h2>
+  <p><strong>Fichier → Enregistrer sous</strong> → <code>data_monitor_[num_groupe].pbix</code>. Le fichier .pbix contient les données, les transformations Power Query, toutes les mesures DAX et tous les visuels. C'est le fichier de travail à remettre.</p>
+
+  <div class="callout warn">
+    <span class="callout-icon">⚠</span>
+    <span>Le fichier .pbix embarque les données au moment de la sauvegarde. Si tu relances le scraper et actualises Power BI, pense à sauvegarder à nouveau avant de remettre le fichier.</span>
+  </div>
+
+  <h2>Partager et valoriser son dashboard</h2>
+  <table class="card-table">
+    <thead><tr><th>Méthode</th><th>Comment</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td>Export PDF</td><td>Fichier → Exporter → PDF</td><td>Rendu du 13 mai, dossier de candidature — statique mais visuel</td></tr>
+      <tr><td>Fichier .pbix</td><td>Enregistrer sous → .pbix</td><td>Rendu du 13 mai, à mettre sur GitHub — contient tout</td></tr>
+      <tr><td>Publier sur Power BI Service</td><td>Accueil → Publier (nécessite compte Microsoft)</td><td>Lien public à coller sur LinkedIn ou dans un portfolio</td></tr>
+      <tr><td>Publier sur le web</td><td>Dans Power BI Service → Fichier → Publier sur le web</td><td>Lien iframe intégrable partout, accessible sans compte</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Checklist avant rendu</h2>
+  <table class="card-table">
+    <thead><tr><th>✓</th><th>Point à vérifier</th></tr></thead>
+    <tbody>
+      <tr><td>☐</td><td>Tous les visuels ont un titre explicite</td></tr>
+      <tr><td>☐</td><td>Les données sont actualisées (date de scraping récente)</td></tr>
+      <tr><td>☐</td><td>Les types de colonnes sont corrects (prix = décimal, note = décimal)</td></tr>
+      <tr><td>☐</td><td>Au moins 2 slicers interactifs (source + catégorie)</td></tr>
+      <tr><td>☐</td><td>Au moins 3 insights identifiés et notés dans l'analyse écrite</td></tr>
+      <tr><td>☐</td><td>Le PDF s'ouvre correctement et est lisible</td></tr>
+      <tr><td>☐</td><td>Le fichier .pbix est sauvegardé et correctement nommé</td></tr>
+    </tbody>
+  </table>
+
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(8)">← Retour</button><button class="btn btn-primary" onclick="goPage(10)">FAQ & Ressources →</button></div>
+</div>
+
+<!-- PAGE 9 — Quiz -->
+
+<div class="page" id="page10">
+  <div class="page-eyebrow">Ressources & FAQ</div>
+  <div class="page-h1">FAQ &amp; Pour aller plus loin</div>
+  <div class="page-intro">Les questions les plus fréquentes sur Power BI — et des ressources pour approfondir, finir le projet Data Monitor proprement, et se préparer à l'alternance.</div>
+
+  <div class="callout tip">
+    <span class="callout-icon">→</span>
+    <span><strong>Pour le portfolio et l'alternance :</strong> mettre le fichier .pbix sur GitHub et capturer des screenshots du dashboard pour LinkedIn et le CV. Un dashboard Power BI bien fait est un vrai atout différenciateur — peu de candidats B1 en ont un. "Publier sur le web" dans Power BI Service génère un lien public à coller partout, sans que le recruteur ait besoin d'un compte.</span>
+  </div>
+
+  <h2>Questions fréquentes</h2>
+
+  <div class="step-list">
+    <div class="step-item"><div class="step-num" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);font-size:13px">Q</div><div class="step-body">
+      <div class="step-title">C'est quoi la différence entre Power BI et Tableau ?</div>
+      <div class="step-desc">Power BI est de Microsoft, s'intègre dans l'écosystème Office et domine en parts de marché. Tableau est plus puissant sur les très grosses volumétries et plus répandu dans les grandes entreprises data (banques, tech). Les deux s'apprennent facilement quand on en maîtrise un — mentionner les deux sur le CV est un plus.</div>
+    </div></div>
+
+    <div class="step-item"><div class="step-num" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);font-size:13px">Q</div><div class="step-body">
+      <div class="step-title">Différence entre mesure DAX et colonne Power Query ?</div>
+      <div class="step-desc">Une colonne Power Query est calculée une fois à l'import et stockée (statique). Une mesure DAX est recalculée dynamiquement à chaque interaction — clic sur un slicer, filtre de catégorie, changement de page. Règle pratique : colonne pour les segments et flags fixes, mesure pour tout ce qui s'agrège ou se filtre.</div>
+    </div></div>
+
+    <div class="step-item"><div class="step-num" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);font-size:13px">Q</div><div class="step-body">
+      <div class="step-title">J'ai plusieurs CSV (un par source scrappée) — comment les croiser dans Power BI ?</div>
+      <div class="step-desc">Importer chaque CSV séparément (Créer → CSV pour chacun). Ils apparaissent comme des tables distinctes dans le volet Données. Aller en vue <strong>Modèle</strong> → faire glisser le champ commun (ex : <code>nom_produit</code>) d'une table vers l'autre pour créer une relation. Les visuels peuvent ensuite croiser les deux tables automatiquement. Si les CSV ont la même structure (mêmes colonnes), l'approche plus simple est de les <strong>fusionner dans Power Query</strong> : Accueil → Nouvelle source → Dossier → pointer vers le dossier contenant tous les CSV → Power BI les empile en une seule table.</div>
+    </div></div>
+
+    <div class="step-item"><div class="step-num" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);font-size:13px">Q</div><div class="step-body">
+      <div class="step-title">Comment fusionner plusieurs CSV qui ont la même structure ?</div>
+      <div class="step-desc">Dans Power Query : Accueil → Nouvelle source → <strong>Dossier</strong> → sélectionner le dossier qui contient tous les CSV. Power BI liste les fichiers. Cliquer sur <strong>Combiner</strong> → Power BI empile toutes les tables et ajoute automatiquement une colonne <code>Source.Name</code> qui indique de quel fichier vient chaque ligne. Parfait si chaque CSV correspond à une date de scraping différente.</div>
+    </div></div>
+
+    <div class="step-item"><div class="step-num" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);font-size:13px">Q</div><div class="step-body">
+      <div class="step-title">Comment filtrer un visuel sans que ça affecte les autres ?</div>
+      <div class="step-desc">Sélectionner le visuel → dans le volet <strong>Filtres</strong> à gauche du canevas → <strong>Filtres sur ce visuel</strong> → glisser un champ et configurer la condition. Ces filtres s'appliquent uniquement au visuel sélectionné — contrairement aux Slicers qui filtrent toute la page.</div>
+    </div></div>
+
+    <div class="step-item"><div class="step-num" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);font-size:13px">Q</div><div class="step-body">
+      <div class="step-title">Un slicer ne filtre pas un visuel spécifique — comment faire ?</div>
+      <div class="step-desc">Sélectionner le slicer → onglet <strong>Format</strong> dans le ruban → <strong>Modifier les interactions</strong>. Une icône filtre/bloquer apparaît sur chaque visuel. Cliquer sur <strong>aucun</strong> (cercle barré) sur le visuel que tu veux exclure du filtre. Utile pour garder un KPI "Total général" fixe même quand un slicer est actif.</div>
+    </div></div>
+
+    <div class="step-item"><div class="step-num" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);font-size:13px">Q</div><div class="step-body">
+      <div class="step-title">Peut-on faire du Python dans Power BI ?</div>
+      <div class="step-desc">Oui — Power BI Desktop permet d'intégrer des scripts Python dans Power Query (pour transformer les données) et comme source de visuel. C'est un pont direct entre le scraper Python et la dataviz. Fonctionnalité avancée, pas utile pour la séance d'aujourd'hui, mais très valorisable en alternance.</div>
+    </div></div>
+
+    <div class="step-item"><div class="step-num" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);font-size:13px">Q</div><div class="step-body">
+      <div class="step-title">Comment connecter Power BI à une API REST ?</div>
+      <div class="step-desc">Dans Power Query : Obtenir des données → <strong>Web</strong> → saisir l'URL de l'API. Power BI fait un GET et parse automatiquement le JSON retourné. Si l'API nécessite des headers ou une authentification, cliquer sur <strong>Avancé</strong> pour les configurer. Utile si le projet expose une API Express plutôt qu'un CSV.</div>
+    </div></div>
+
+    <div class="step-item"><div class="step-num" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);font-size:13px">Q</div><div class="step-body">
+      <div class="step-title">Comment mettre à jour les données sans tout refaire ?</div>
+      <div class="step-desc">Dans Power BI Service : bouton <strong>Actualiser</strong> dans le menu du rapport. Power BI relit la source (CSV OneDrive, SQLite via ODBC…) et rejoue toutes les étapes Power Query. Tous les visuels se mettent à jour en quelques secondes sans rien reconfigurer.</div>
+    </div></div>
+
+    <div class="step-item"><div class="step-num" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);font-size:13px">Q</div><div class="step-body">
+      <div class="step-title">Mon graphique affiche "Somme de prix" à 42 000 — comment avoir la moyenne ?</div>
+      <div class="step-desc">C'est le comportement par défaut : Power BI <strong>somme</strong> les valeurs numériques. Cliquer sur la flèche <strong>▼</strong> à côté du champ dans la zone Valeurs → choisir <strong>Moyenne</strong>. Pour les prix et les notes, toujours choisir Moyenne. Pour les avis, Somme peut avoir du sens (volume total d'avis).</div>
+    </div></div>
+  </div>
+
+  <h2>Pour aller plus loin — le projet</h2>
+  <div class="def-grid">
+    <div class="def-card">
+      <div class="def-term">📖 Documentation Microsoft officielle</div>
+      <div class="def-body">La référence complète sur DAX, Power Query, les visuels et la publication.</div>
+      <div class="def-ex"><a href="https://learn.microsoft.com/fr-fr/power-bi/" target="_blank" style="color:var(--accent-text)">learn.microsoft.com/fr-fr/power-bi</a></div>
+    </div>
+    <div class="def-card">
+      <div class="def-term">🎓 Microsoft Learn — Power BI</div>
+      <div class="def-body">Parcours d'apprentissage guidé, gratuit, avec exercices interactifs. Idéal pour aller au-delà de la séance.</div>
+      <div class="def-ex"><a href="https://learn.microsoft.com/fr-fr/training/powerplatform/power-bi" target="_blank" style="color:var(--accent-text)">learn.microsoft.com → Power BI Learning Path</a></div>
+    </div>
+    <div class="def-card">
+      <div class="def-term">🎬 Guy in a Cube (YouTube)</div>
+      <div class="def-body">La chaîne YouTube de référence sur Power BI — tutoriels DAX, visuels avancés, nouveautés mensuelles. En anglais, sous-titres disponibles.</div>
+      <div class="def-ex"><a href="https://www.youtube.com/@GuyInACube" target="_blank" style="color:var(--accent-text)">youtube.com/@GuyInACube</a></div>
+    </div>
+    <div class="def-card">
+      <div class="def-term">📊 SQLBI — DAX avancé</div>
+      <div class="def-body">Site de référence sur DAX par les auteurs du livre "The Definitive Guide to DAX". Articles, vidéos, outils en ligne pour comprendre CALCULATE en profondeur.</div>
+      <div class="def-ex"><a href="https://www.sqlbi.com" target="_blank" style="color:var(--accent-text)">sqlbi.com</a></div>
+    </div>
+    <div class="def-card">
+      <div class="def-term">💬 Communauté Power BI</div>
+      <div class="def-body">Forum officiel Microsoft. Poser une question, chercher des solutions à des erreurs, voir ce que font les autres. Très actif.</div>
+      <div class="def-ex"><a href="https://community.fabric.microsoft.com/t5/Power-BI-forums/ct-p/pbi_general" target="_blank" style="color:var(--accent-text)">community.fabric.microsoft.com</a></div>
+    </div>
+    <div class="def-card">
+      <div class="def-term">🗃️ DAX.do — tester DAX en ligne</div>
+      <div class="def-body">Sandbox en ligne pour tester des formules DAX sans ouvrir Power BI. Idéal pour comprendre CALCULATE, FILTER, ALL.</div>
+      <div class="def-ex"><a href="https://dax.do" target="_blank" style="color:var(--accent-text)">dax.do</a></div>
+    </div>
+  </div>
+
+  <h2>Pour l'alternance — se différencier</h2>
+  <div class="def-grid">
+    <div class="def-card">
+      <div class="def-term">🏆 Certification PL-300</div>
+      <div class="def-body">La certification officielle Microsoft "Power BI Data Analyst". Reconnue par les recruteurs, passable en ligne, ~165€. Objectif réaliste après 2-3 mois de pratique.</div>
+      <div class="def-ex"><a href="https://learn.microsoft.com/fr-fr/credentials/certifications/power-bi-data-analyst-associate/" target="_blank" style="color:var(--accent-text)">Certification PL-300 sur Microsoft Learn</a></div>
+    </div>
+    <div class="def-card">
+      <div class="def-term">💼 Maven Analytics (pratique)</div>
+      <div class="def-body">Challenges de dataviz sur des jeux de données réels. Construire un portfolio de dashboards variés — bien plus parlant qu'un CV vierge.</div>
+      <div class="def-ex"><a href="https://mavenanalytics.io/challenges" target="_blank" style="color:var(--accent-text)">mavenanalytics.io/challenges</a></div>
+    </div>
+    <div class="def-card">
+      <div class="def-term">📁 GitHub + LinkedIn</div>
+      <div class="def-body">Mettre le .pbix sur GitHub avec un README qui explique le projet et les insights. Capturer 2-3 screenshots pour LinkedIn. Un dashboard publié parle mieux qu'une ligne "Power BI" sur un CV.</div>
+      <div class="def-ex">Publier sur le web dans Power BI Service → lien public à coller dans le README et sur LinkedIn</div>
+    </div>
+  </div>
+
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(9)">← Retour</button><button class="btn btn-primary" onclick="goPage(11)">Quiz →</button></div>
+</div>
+
+
+<div class="page" id="page11">
+  <div class="page-eyebrow">Quiz de validation</div>
+  <div class="page-h1">Quiz — 10 questions</div>
+  <div class="page-intro">Validation de la séance.</div>
+
+  <div class="quiz-block"><div class="quiz-q">Q1 — Quel bouton clique-t-on pour créer un nouveau rapport dans Power BI Service ?</div><div class="quiz-opts"><button class="quiz-opt" onclick="qa('q1','ko',this)">Mon espace de travail → Importer un fichier</button><button class="quiz-opt" onclick="qa('q1','ok',this)">Créer dans le panneau gauche, ou + Nouveau rapport depuis l'Accueil</button><button class="quiz-opt" onclick="qa('q1','ko',this)">Parcourir → Ouvrir un rapport existant</button></div><div class="quiz-fb" id="fb-q1"></div></div>
+
+  <div class="quiz-block"><div class="quiz-q">Q2 — Comment importe-t-on le CSV dans Power BI Service ?</div><div class="quiz-opts"><button class="quiz-opt" onclick="qa('q2','ko',this)">Copier-coller le contenu du CSV</button><button class="quiz-opt" onclick="qa('q2','ok',this)">Créer → tuile CSV → sélectionner le fichier dans l'explorateur</button><button class="quiz-opt" onclick="qa('q2','ko',this)">Obtenir des données → Texte/CSV</button></div><div class="quiz-fb" id="fb-q2"></div></div>
+
+  <div class="quiz-block"><div class="quiz-q">Q3 — Power Query modifie-t-il le fichier CSV source ?</div><div class="quiz-opts"><button class="quiz-opt" onclick="qa('q3','ko',this)">Oui</button><button class="quiz-opt" onclick="qa('q3','ok',this)">Non — les transformations sont non destructives, le CSV reste intact</button><button class="quiz-opt" onclick="qa('q3','ko',this)">Oui si on clique Enregistrer</button></div><div class="quiz-fb" id="fb-q3"></div></div>
+
+  <div class="quiz-block"><div class="quiz-q">Q4 — Comment annuler une transformation dans Power Query ?</div><div class="quiz-opts"><button class="quiz-opt" onclick="qa('q4','ko',this)">Ctrl+Z</button><button class="quiz-opt" onclick="qa('q4','ok',this)">Supprimer l'étape dans le volet "Étapes appliquées"</button><button class="quiz-opt" onclick="qa('q4','ko',this)">Fermer Power Query sans sauvegarder</button></div><div class="quiz-fb" id="fb-q4"></div></div>
+
+  <div class="quiz-block"><div class="quiz-q">Q5 — Quelle formule DAX calcule la note moyenne ?</div><div class="quiz-opts"><button class="quiz-opt" onclick="qa('q5','ko',this)">MEAN(produits[note])</button><button class="quiz-opt" onclick="qa('q5','ok',this)">AVERAGE(produits[note])</button><button class="quiz-opt" onclick="qa('q5','ko',this)">SUM(produits[note])</button></div><div class="quiz-fb" id="fb-q5"></div></div>
+
+  <div class="quiz-block"><div class="quiz-q">Q6 — Comment changer la Somme en Moyenne dans un visuel sans créer de mesure DAX ?</div><div class="quiz-opts"><button class="quiz-opt" onclick="qa('q6','ko',this)">Recréer le visuel</button><button class="quiz-opt" onclick="qa('q6','ok',this)">Flèche ▼ à côté du champ dans la zone Valeurs → Moyenne</button><button class="quiz-opt" onclick="qa('q6','ko',this)">Format → Agrégation → Moyenne</button></div><div class="quiz-fb" id="fb-q6"></div></div>
+
+  <div class="quiz-block"><div class="quiz-q">Q7 — À quoi sert un Slicer ?</div><div class="quiz-opts"><button class="quiz-opt" onclick="qa('q7','ko',this)">Afficher un graphique en secteurs</button><button class="quiz-opt" onclick="qa('q7','ok',this)">Créer un filtre interactif qui s'applique à tous les visuels de la page simultanément</button><button class="quiz-opt" onclick="qa('q7','ko',this)">Découper les données en quartiles</button></div><div class="quiz-fb" id="fb-q7"></div></div>
+
+  <div class="quiz-block"><div class="quiz-q">Q8 — Quel visuel pour comparer prix moyen × note × popularité en une seule vue ?</div><div class="quiz-opts"><button class="quiz-opt" onclick="qa('q8','ko',this)">Histogramme groupé — compare des catégories mais pas 3 variables simultanément</button><button class="quiz-opt" onclick="qa('q8','ok',this)">Graphique à bulles — axe X = prix, axe Y = note, taille = nb_avis</button><button class="quiz-opt" onclick="qa('q8','ko',this)">Matrice — affiche des données croisées en tableau, pas de corrélation visuelle</button></div><div class="quiz-fb" id="fb-q8"></div></div>
+
+  <div class="quiz-block"><div class="quiz-q">Q9 — Comment exporter le dashboard en PDF ?</div><div class="quiz-opts"><button class="quiz-opt" onclick="qa('q9','ko',this)">Imprimer → Enregistrer en PDF</button><button class="quiz-opt" onclick="qa('q9','ok',this)">Fichier → Exporter → Exporter en PDF</button><button class="quiz-opt" onclick="qa('q9','ko',this)">Partager → Télécharger PDF</button></div><div class="quiz-fb" id="fb-q9"></div></div>
+
+  <div class="quiz-block"><div class="quiz-q">Q10 — Que contient un fichier .pbix ?</div><div class="quiz-opts"><button class="quiz-opt" onclick="qa('q10','ko',this)">Uniquement les visuels — les données restent dans le CSV</button><button class="quiz-opt" onclick="qa('q10','ok',this)">Les données, les transformations Power Query et tous les visuels</button><button class="quiz-opt" onclick="qa('q10','ko',this)">Uniquement les données brutes</button></div><div class="quiz-fb" id="fb-q10"></div></div>
+
+  <div id="quiz-final" style="display:none">
+    <div class="final-card">
+      <div class="final-title">Séance validée !</div>
+      <div class="final-sub">Setup, connexion CSV, Power Query, modèle de données, visuels, dashboard Data Monitor, export PDF — vous êtes prêts pour la soutenance du 20 mai.</div>
+    </div>
+  </div>
+
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goPage(10)">← Retour</button><span></span></div>
+</div>
+
+</main>
+</div>
+<script>
+var cur=0,total=12;
+var qa_done={};
+var qa_fb={
+  q1:{ok:"Exact. Power BI Desktop est Windows uniquement. Les Mac doivent utiliser une VM Windows, Power BI Service (web) ou Power BI Service.",ko:"Non. Pour la séance on utilise Power BI Service — la version web sur app.powerbi.com, sans installation, qui fonctionne sur tous les OS."},
+  q2:{ok:"Exact. La tuile CSV sur la page de création ouvre directement un explorateur de fichiers — import simple et direct.",ko:"Non. Power BI ne lit pas SQLite sans driver ODBC externe. La solution la plus simple est d'exporter un CSV depuis Python."},
+  q3:{ok:"Exact. Power Query est non destructif — toutes les transformations sont des étapes qui s'appliquent à une copie des données. Le fichier CSV source reste intact.",ko:"Non. Power Query ne touche jamais au fichier source. Les transformations sont stockées comme des étapes et s'appliquent en mémoire."},
+  q4:{ok:"Exact. Chaque transformation crée une étape dans le volet 'Étapes appliquées'. Supprimer une étape annule la transformation correspondante.",ko:"Non. Ctrl+Z fonctionne partiellement mais la méthode fiable est de supprimer l'étape dans le volet 'Étapes appliquées'."},
+  q5:{ok:"Exact. AVERAGE(table[colonne]) calcule la moyenne d'une colonne numérique. C'est l'une des formules DAX de base.",ko:"Non. La formule correcte est AVERAGE(produits[note]). MEAN n'existe pas en DAX."},
+  q6:{ok:"Exact. Cliquer sur la flèche ▼ à côté du champ dans la zone Valeurs permet de choisir l'agrégation : Somme, Moyenne, Min, Max, Nombre...",ko:"Non. Pas besoin de recréer le visuel. La flèche ▼ à côté du champ dans Valeurs permet de changer l'agrégation directement."},
+  q7:{ok:"Exact. Le Slicer est le filtre interactif de Power BI. Cliquer sur une valeur dans le slicer filtre tous les visuels de la page simultanément — c'est la fonctionnalité phare des dashboards interactifs.",ko:"Non. Le Slicer est un filtre interactif — pas un type de graphique. Il permet de filtrer tous les visuels de la page en un clic."},
+  q8:{ok:"Exact. Le graphique à bulles croise deux axes numériques (axe X = prix, axe Y = note) et utilise la taille des bulles pour une 3e variable (nb_avis). C'est le seul visuel qui corrèle 3 variables simultanément.",ko:"Non. L'histogramme et la matrice ne permettent pas de corréler 3 variables simultanément. Le graphique à bulles (nuage de points avec taille) est le bon choix ici."},
+  q9:{ok:"Exact. Fichier → Exporter → Exporter en PDF génère un PDF avec une page par onglet du rapport.",ko:"Non. La méthode correcte est Fichier → Exporter → Exporter en PDF. L'impression navigateur ne donne pas un résultat aussi propre."},
+  q10:{ok:"Exact. Le fichier .pbix embarque tout : les données importées, les étapes Power Query, le modèle de données, les mesures DAX et tous les visuels. C'est le fichier de travail complet.",ko:"Non. Le .pbix embarque tout — données, transformations et visuels. C'est un package complet, pas seulement les visuels."}
+};
+function qa(qid,res,btn){
+  if(qa_done[qid])return;qa_done[qid]=true;
+  btn.closest('.quiz-opts').querySelectorAll('.quiz-opt').forEach(function(b){b.disabled=true});
+  btn.classList.add(res==='ok'?'correct':'wrong');
+  var fb=document.getElementById('fb-'+qid);
+  fb.textContent=qa_fb[qid][res];
+  fb.className='quiz-fb show '+(res==='ok'?'ok':'ko');
+  if(Object.keys(qa_done).length===10){setTimeout(function(){var el=document.getElementById('quiz-final');el.style.display='block';el.scrollIntoView({behavior:'smooth',block:'nearest'})},400)}
+}
+var iq_done={};
+var iq_fb={
+  'p0q1':{ok:"Exact. Le bouton Créer dans le panneau gauche (ou + Nouveau rapport depuis l'Accueil) est le point de départ pour tout nouveau rapport.",ko:"Non. Parcourir sert à retrouver des rapports existants. Pour créer, c'est le bouton Créer dans le panneau gauche."},
+  'p0q2':{ok:"Exact. La tuile CSV est directement visible sur la page de création. Un clic ouvre l'explorateur de fichiers.",ko:"Non. La tuile CSV est directement accessible sur la page de création — pas besoin de passer par Obtenir des données ni de coller manuellement."},
+  'p1q1':{ok:"Exact. La tuile CSV sur la page de création ouvre un explorateur de fichiers — import direct, sans copier-coller.",ko:"Non. Le chemin Obtenir des données → Texte/CSV est celui de Power BI Desktop. Dans Service, la tuile CSV est sur la page de création."},
+  'p1q2':{ok:"Exact. Power BI cherche le fichier à l'emplacement exact où il a été connecté. Si déplacé, mettre à jour le chemin dans Power Query → Source.",ko:"Non. Power BI ne copie pas le fichier — il le lit à chaque actualisation depuis son emplacement. Si déplacé, erreur."},
+  'p2q1':{ok:"Exact. La Colonne conditionnelle propose une interface graphique avec menus déroulants — pas besoin d'écrire de formule. Idéal pour Segment prix ou bien_note.",ko:"Non. La colonne personnalisée nécessite d'écrire la formule en M. La colonne conditionnelle propose une interface graphique sans formule."},
+  'p2q2':{ok:"Exact. Colonne Power Query = calculée une fois à l'import, stockée dans la table. Mesure DAX = recalculée dynamiquement à chaque filtre ou interaction avec le rapport.",ko:"Non. La distinction est fondamentale : Power Query crée des colonnes statiques (segment, flag), DAX crée des agrégations dynamiques (moyennes, écarts)."},
+  'p3q1':{ok:"Exact. On fait glisser la FK (côté plusieurs) vers la PK (côté un). C'est la même logique que les règles de passage Merise.",ko:"Non. On fait glisser depuis la FK vers la PK — du côté 'plusieurs' vers le côté 'un'."},
+  'p3q1':{ok:"Exact. On fait glisser depuis la FK vers la PK — du côté plusieurs vers le côté un.",ko:"Non. On fait glisser depuis la FK vers la PK, pas l'inverse."},'p3q2':{ok:"Exact. Avec un seul CSV tout est dans une table — pas besoin de relation. La vue Modèle devient utile dès qu'on croise plusieurs tables.",ko:"Non. Avec un seul CSV, une seule table. Les relations ne servent que si on importe plusieurs tables à croiser."},
+  'p4q1':{ok:"Exact. COUNTROWS(produits) compte les lignes. COUNT compte les valeurs non vides d'une colonne.",ko:"Non. COUNT compte les valeurs d'une colonne. COUNTROWS compte les lignes de la table — c'est ce qu'on veut pour le nombre de produits."},
+  'p4q2':{ok:"Exact. Colonne Power Query = calculée une fois à l'import, stockée. Mesure DAX = recalculée dynamiquement à chaque filtre ou interaction.",ko:"Non. La distinction est fondamentale : Power Query crée des colonnes statiques, DAX crée des agrégations dynamiques."}
+};
+function iq(qid,res,btn){
+  if(iq_done[qid])return;iq_done[qid]=true;
+  btn.closest('.quiz-opts').querySelectorAll('.quiz-opt').forEach(function(b){b.disabled=true});
+  btn.classList.add(res==='ok'?'correct':'wrong');
+  var fb=document.getElementById('iqfb-'+qid);
+  fb.textContent=iq_fb[qid][res];
+  fb.className='quiz-fb show '+(res==='ok'?'ok':'ko');
+}
+function goPage(n){
+  document.getElementById('page'+cur).classList.remove('active');
+  document.getElementById('nav'+cur).classList.remove('active');
+  document.getElementById('nav'+cur).classList.add('done');
+  cur=n;
+  document.getElementById('page'+n).classList.add('active');
+  document.getElementById('nav'+n).classList.add('active');
+  document.getElementById('nav'+n).classList.remove('done');
+  var pct=Math.round((n/(total-1))*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+' %';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
+
+</main>
+</div>
+<script>
+var cur=0,total=12;
+var qa_done={};
+var qa_fb={
+  q1:{ok:"Exact. Créer dans le panneau gauche (ou + Nouveau rapport depuis l'Accueil) ouvre la page de sélection de source avec la tuile CSV.",ko:"Non. Ces options servent à retrouver des rapports existants. Pour créer un nouveau rapport, c'est le bouton Créer dans le panneau gauche."},
+  q2:{ok:"Exact. La tuile CSV sur la page de création ouvre directement un explorateur de fichiers — import simple et direct.",ko:"Non. Obtenir des données → Texte/CSV est le chemin Desktop. Dans Power BI Service, la tuile CSV est sur la page de création."},
+  q3:{ok:"Exact. Power Query est non destructif — les étapes s'appliquent en mémoire. Le CSV source n'est jamais touché.",ko:"Non. Power Query ne modifie jamais le fichier source. Les transformations sont des étapes stockées."},
+  q4:{ok:"Exact. Chaque transformation est une étape visible. Supprimer l'étape annule la transformation précisément.",ko:"Non. Ctrl+Z est limité. La méthode fiable est de supprimer l'étape dans le volet 'Étapes appliquées'."},
+  q5:{ok:"Exact. AVERAGE(table[colonne]) calcule la moyenne. MEAN n'existe pas en DAX.",ko:"Non. La formule correcte est AVERAGE(produits[note]). MEAN et SUM ne donnent pas une moyenne."},
+  q6:{ok:"Exact. La flèche ▼ dans la zone Valeurs permet de changer l'agrégation directement.",ko:"Non. Pas besoin de recréer le visuel. La flèche ▼ à côté du champ dans Valeurs suffit."},
+  q7:{ok:"Exact. Le Slicer filtre tous les visuels de la page simultanément — c'est l'interactivité centrale de Power BI.",ko:"Non. Le Slicer est un filtre interactif, pas un type de graphique."},
+  q8:{ok:"Exact. Le graphique à bulles croise axe X (prix), axe Y (note) et taille (nb_avis) — 3 variables simultanément.",ko:"Non. L'histogramme et la matrice ne corrèlent pas 3 variables. Le graphique à bulles est le bon choix."},
+  q9:{ok:"Exact. Fichier → Exporter → Exporter en PDF génère un PDF avec une page par onglet du rapport.",ko:"Non. Fichier → Exporter → Exporter en PDF est le bon chemin — pas Imprimer ni Partager."},
+  q10:{ok:"Exact. Le .pbix embarque tout : données, transformations Power Query, mesures DAX et visuels.",ko:"Non. Le .pbix embarque tout — données, transformations et visuels. C'est un package complet."}
+};
+function qa(qid,res,btn){
+  if(qa_done[qid])return;qa_done[qid]=true;
+  btn.closest('.quiz-opts').querySelectorAll('.quiz-opt').forEach(function(b){b.disabled=true});
+  btn.classList.add(res==='ok'?'correct':'wrong');
+  var fb=document.getElementById('fb-'+qid);
+  fb.textContent=qa_fb[qid][res];
+  fb.className='quiz-fb show '+(res==='ok'?'ok':'ko');
+  if(Object.keys(qa_done).length===10){setTimeout(function(){var el=document.getElementById('quiz-final');el.style.display='block';el.scrollIntoView({behavior:'smooth',block:'nearest'})},400)}
+}
+var iq_done={};
+var iq_fb={
+  'p0q1':{ok:"Exact. Créer dans le panneau gauche (ou + Nouveau rapport) est le point de départ. Les autres options servent à naviguer dans des rapports existants.",ko:"Non. Ces options servent à retrouver des rapports existants. Le bouton Créer dans le panneau gauche crée un nouveau rapport."},
+  'p0q2':{ok:"Exact. La tuile CSV est directement visible sur la page de création — un clic ouvre l'explorateur de fichiers.",ko:"Non. Obtenir des données → Texte/CSV est le chemin Desktop. Dans Service, la tuile CSV est sur la page de création. Coller manuellement fonctionne aussi mais est limité à 512 Ko."},
+  'p1q1':{ok:"Exact. La tuile CSV sur la page de création ouvre un explorateur de fichiers — import direct, sans copier-coller.",ko:"Non. Accueil → Obtenir des données → Texte/CSV est le chemin Power BI Desktop. Dans Service, c'est Créer → tuile CSV."},
+  'p1q2':{ok:"Exact. Avec ODBC, Power BI lit directement la base SQLite. Un clic Actualiser après chaque scraping — pas besoin de réexporter un CSV.",ko:"Non. L'avantage ODBC c'est l'actualisation automatique depuis la base. Avec le CSV, il faut réexporter manuellement à chaque scraping."},
+  'p2q1':{ok:"Exact. Il faut d'abord supprimer l'étape automatique 'Type de co...' puis cliquer sur l'icône Aᵦ et choisir Utilisation des paramètres régionaux → Anglais (États-Unis).",ko:"Non. L'étape automatique et le menu direct échouent à cause du séparateur décimal. La seule méthode qui fonctionne : supprimer l'étape → icône Aᵦ → Utilisation des paramètres régionaux."},
+  'p2q2':{ok:"Exact. La Colonne conditionnelle propose une interface graphique avec menus déroulants — pas besoin d'écrire de formule.",ko:"Non. La colonne personnalisée nécessite d'écrire la formule en M. La colonne conditionnelle propose une interface graphique sans formule."},
+  'p3q1':{ok:"Exact. La flèche ▼ dans la zone Valeurs permet de choisir l'agrégation sans recréer le visuel.",ko:"Non. Pas besoin de recréer le visuel. La flèche ▼ à côté du champ dans Valeurs suffit."},
+  'p3q2':{ok:"Exact. Le Slicer filtre tous les visuels de la page simultanément en un clic — c'est l'interactivité de Power BI.",ko:"Non. Le Slicer est un filtre interactif, pas un type de graphique."},
+  'p4q1':{ok:"Exact. On fait glisser depuis la FK vers la PK — du côté plusieurs vers le côté un.",ko:"Non. On fait glisser depuis la FK vers la PK, pas l'inverse. Power BI ne crée pas les relations automatiquement."},
+  'p4q2':{ok:"Exact. Avec un seul CSV tout est dans une table — pas besoin de relation. Les relations deviennent utiles dès qu'on importe plusieurs tables.",ko:"Non. Avec un seul CSV, pas besoin de relation. La vue Modèle devient utile si on importe plusieurs CSV à croiser."},
+  'p5q1':{ok:"Exact. COUNTROWS(produits) compte les lignes de la table. COUNT compte les valeurs non vides d'une colonne.",ko:"Non. COUNT compte les valeurs d'une colonne. COUNTROWS compte les lignes de la table."},
+  'p5q2':{ok:"Exact. CALCULATE modifie le contexte de filtre — il permet de forcer un calcul dans des conditions spécifiques, quel que soit le filtre actif dans le rapport.",ko:"Non. SUM et AVERAGE font les calculs de base. CALCULATE est la fonction qui modifie le contexte de filtre pour calculer dans des conditions spécifiques."}
+};
+function iq(qid,res,btn){
+  if(iq_done[qid])return;iq_done[qid]=true;
+  btn.closest('.quiz-opts').querySelectorAll('.quiz-opt').forEach(function(b){b.disabled=true});
+  btn.classList.add(res==='ok'?'correct':'wrong');
+  var fb=document.getElementById('iqfb-'+qid);
+  fb.textContent=iq_fb[qid][res];
+  fb.className='quiz-fb show '+(res==='ok'?'ok':'ko');
+}
+function toggleCorrige(id){
+  var el=document.getElementById(id);
+  var open=el.classList.toggle('open');
+  document.getElementById(id+'-arr').textContent=open?'▲':'▼';
+}
+function goPage(n){
+  document.getElementById('page'+cur).classList.remove('active');
+  document.getElementById('nav'+cur).classList.remove('active');
+  document.getElementById('nav'+cur).classList.add('done');
+  cur=n;
+  document.getElementById('page'+n).classList.add('active');
+  document.getElementById('nav'+n).classList.add('active');
+  document.getElementById('nav'+n).classList.remove('done');
+  var pct=Math.round((n/(total-1))*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+' %';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
